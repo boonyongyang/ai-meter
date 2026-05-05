@@ -216,7 +216,7 @@ private struct CopilotHeroView: View {
         }
         .buttonStyle(.plain)
         .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .help("Refresh all providers")
+        .help("Refresh Copilot quota")
         .accessibilityLabel("Refresh all providers")
         .accessibilityValue(allUnlimited ? "Unlimited monthly quota" : "\(highestPercent)% used")
         .accessibilityHint("Refreshes all provider data.")
