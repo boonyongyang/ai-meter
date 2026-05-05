@@ -192,6 +192,7 @@ private struct CodexHeroView: View {
     let timeZone: TimeZone
     let pace: UsagePace.Result?
     let now: Date
+    let onRefresh: () -> Void
 
     private var paceLabel: String {
         guard let pace else { return "Stable burn" }
@@ -230,6 +231,18 @@ private struct CodexHeroView: View {
     }
 
     var body: some View {
+        Button(action: onRefresh) {
+            heroCard
+        }
+        .buttonStyle(.plain)
+        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .help("Refresh Codex quota (⌘R)")
+        .accessibilityLabel("Refresh Codex quota")
+        .accessibilityValue("\(data.primaryPercent)% used")
+        .accessibilityHint("Activates the same refresh action as Command-R.")
+    }
+
+    private var heroCard: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Window Telemetry")
@@ -899,7 +912,8 @@ struct CodexTabView: View {
                         windowDurationHours: 5.0,
                         now: context.date
                     ),
-                    now: context.date
+                    now: context.date,
+                    onRefresh: onRefresh
                 )
             }
 

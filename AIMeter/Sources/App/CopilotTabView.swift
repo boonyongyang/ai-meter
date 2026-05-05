@@ -181,6 +181,7 @@ private struct CopilotHeroView: View {
     let data: CopilotUsageData
     let timeZone: TimeZone
     let now: Date
+    let onRefresh: () -> Void
 
     private var highestPercent: Int {
         data.highestUtilization
@@ -210,6 +211,18 @@ private struct CopilotHeroView: View {
     }
 
     var body: some View {
+        Button(action: onRefresh) {
+            heroCard
+        }
+        .buttonStyle(.plain)
+        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .help("Refresh Copilot quota (⌘R)")
+        .accessibilityLabel("Refresh Copilot quota")
+        .accessibilityValue(allUnlimited ? "Unlimited monthly quota" : "\(highestPercent)% used")
+        .accessibilityHint("Activates the same refresh action as Command-R.")
+    }
+
+    private var heroCard: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Monthly Quota")
@@ -580,7 +593,12 @@ struct CopilotTabView: View {
                 }
 
                 TimelineView(.periodic(from: .now, by: 1)) { context in
-                    CopilotHeroView(data: copilotData, timeZone: timeZone, now: context.date)
+                    CopilotHeroView(
+                        data: copilotData,
+                        timeZone: timeZone,
+                        now: context.date,
+                        onRefresh: onRefresh
+                    )
                 }
 
                 CopilotLimitsView(rows: limitRows(from: copilotData))
