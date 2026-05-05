@@ -655,7 +655,7 @@ private struct CodexFooterView: View {
                         .foregroundColor(CodexTelemetryTheme.secondaryText)
                 }
                 .buttonStyle(.plain)
-                .help("Refresh (⌘R)")
+                .help("Refresh")
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

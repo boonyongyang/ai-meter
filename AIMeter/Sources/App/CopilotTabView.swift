@@ -533,7 +533,7 @@ private struct CopilotFooterView: View {
                         .foregroundColor(CopilotTelemetryTheme.secondaryText)
                 }
                 .buttonStyle(.plain)
-                .help("Refresh (⌘R)")
+                .help("Refresh")
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
