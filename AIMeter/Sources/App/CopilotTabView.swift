@@ -216,10 +216,10 @@ private struct CopilotHeroView: View {
         }
         .buttonStyle(.plain)
         .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .help("Refresh Copilot quota (⌘R)")
-        .accessibilityLabel("Refresh Copilot quota")
+        .help("Refresh all providers")
+        .accessibilityLabel("Refresh all providers")
         .accessibilityValue(allUnlimited ? "Unlimited monthly quota" : "\(highestPercent)% used")
-        .accessibilityHint("Activates the same refresh action as Command-R.")
+        .accessibilityHint("Refreshes all provider data.")
     }
 
     private var heroCard: some View {

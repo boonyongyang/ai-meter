@@ -236,10 +236,10 @@ private struct CodexHeroView: View {
         }
         .buttonStyle(.plain)
         .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .help("Refresh Codex quota (⌘R)")
-        .accessibilityLabel("Refresh Codex quota")
+        .help("Refresh all providers")
+        .accessibilityLabel("Refresh all providers")
         .accessibilityValue("\(data.primaryPercent)% used")
-        .accessibilityHint("Activates the same refresh action as Command-R.")
+        .accessibilityHint("Refreshes all provider data.")
     }
 
     private var heroCard: some View {
