@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2026-05-05
+
+### Added
+
+- Tap-to-refresh on Copilot monthly quota and Codex window telemetry hero cards. Cards become real SwiftUI buttons with rounded hit targets, accessibility labels, and the same refresh action as the footer button (#8)
+
 ### Fixed
 
-- Footer refresh tooltips on Copilot and Codex tabs no longer claim a `(⌘R)` keyboard shortcut that was never bound
+- Footer refresh tooltips on Copilot and Codex tabs no longer claim a `(⌘R)` keyboard shortcut that was never bound (#9)
 
 ## [2.5.0] - 2026-05-03
 
