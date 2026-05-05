@@ -189,27 +189,25 @@ final class CodexOAuthService: ObservableObject {
             return cached.token
         }
 
-        // Need a refresh — use single-flight to avoid concurrent calls hitting the token endpoint
+        // Need a refresh — use single-flight to avoid concurrent calls hitting the token endpoint.
+        // Cleanup runs inside the Task body via defer so the dict slot is cleared exactly once,
+        // atomically with task completion (the closure is @MainActor-isolated). If awaiters cleared
+        // it instead, a later caller's task could be clobbered by a stale awaiter's cleanup.
         let task: Task<CodexOAuthTokens, Error>
         if let existing = inflightRefresh[accountID] {
             task = existing
         } else {
             let refreshTask = Task<CodexOAuthTokens, Error> { [weak self] in
                 guard let self else { throw CodexOAuthError.invalidTokenResponse }
+                defer { self.inflightRefresh[accountID] = nil }
                 return try await self.performRefresh(for: accountID)
             }
             inflightRefresh[accountID] = refreshTask
             task = refreshTask
         }
 
-        do {
-            let tokens = try await task.value
-            inflightRefresh[accountID] = nil
-            return tokens.accessToken
-        } catch {
-            inflightRefresh[accountID] = nil
-            throw error
-        }
+        let tokens = try await task.value
+        return tokens.accessToken
     }
 
     /// Returns true if this account has a stored refresh token (OAuth upgrade present).
@@ -232,27 +230,23 @@ final class CodexOAuthService: ObservableObject {
     func refreshAccessToken(for accountID: String) async throws -> String? {
         guard hasOAuthTokens(for: accountID) else { return nil }
 
-        // Reuse the single-flight guard — if a refresh is already in flight, join it
+        // Reuse the single-flight guard — if a refresh is already in flight, join it.
+        // Cleanup runs inside the Task body via defer (see currentAccessToken for the rationale).
         let task: Task<CodexOAuthTokens, Error>
         if let existing = inflightRefresh[accountID] {
             task = existing
         } else {
             let refreshTask = Task<CodexOAuthTokens, Error> { [weak self] in
                 guard let self else { throw CodexOAuthError.invalidTokenResponse }
+                defer { self.inflightRefresh[accountID] = nil }
                 return try await self.performRefresh(for: accountID)
             }
             inflightRefresh[accountID] = refreshTask
             task = refreshTask
         }
 
-        do {
-            let tokens = try await task.value
-            inflightRefresh[accountID] = nil
-            return tokens.accessToken
-        } catch {
-            inflightRefresh[accountID] = nil
-            throw error
-        }
+        let tokens = try await task.value
+        return tokens.accessToken
     }
 
     // MARK: - PKCE Generation

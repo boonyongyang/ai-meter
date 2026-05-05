@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-05-05
+
+### Fixed
+
+- OAuth refresh dedup race in `CodexOAuthService`. Cleanup of the in-flight refresh task slot moved from the outer awaiter's continuation into the `Task` body via `defer`, so the dict slot is cleared exactly once and atomically with task completion. Closes a window where a late awaiter's cleanup could clobber a freshly-stored later task, allowing two concurrent `/oauth/token` POSTs and Auth0 family-revoke
+
 ## [2.6.0] - 2026-05-05
 
 ### Added
