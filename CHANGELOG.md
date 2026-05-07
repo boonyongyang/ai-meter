@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.2] - 2026-05-07
+
+### Fixed
+
+- Claude login white-screen on the Google sign-in popup. Google's "embedded user agent" gate inspects JS surface beyond the UA string — `navigator.webdriver`, an empty `navigator.plugins`, and missing `navigator.languages`. We now inject a stealth `WKUserScript` at document-start (in all frames, on both the parent and popup configs) that masks those signals. The Safari `customUserAgent` already in place is unchanged
+
 ## [2.6.1] - 2026-05-05
 
 ### Fixed

@@ -322,6 +322,10 @@ final class WebLoginCoordinator: NSObject, ObservableObject, WKNavigationDelegat
     init(authManager: SessionAuthManager) {
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .nonPersistent()
+        // Google's "embedded user-agent" detector inspects JS surface beyond UA: navigator.webdriver,
+        // empty plugins array, no languages. Inject a stealth script at document-start so the masking
+        // is in place before Google's gate runs. Forward to the popup config too (createWebViewWith).
+        config.userContentController.addUserScript(Self.stealthUserScript())
         let wv = WKWebView(frame: .zero, configuration: config)
         wv.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
         self.webView = wv
@@ -333,6 +337,29 @@ final class WebLoginCoordinator: NSObject, ObservableObject, WKNavigationDelegat
         progressObservation = wv.observe(\.estimatedProgress) { [weak self] wv, _ in
             DispatchQueue.main.async { self?.loadProgress = wv.estimatedProgress }
         }
+    }
+
+    /// Mask WebKit-detection signals Google's gate inspects. Runs at document start in all frames.
+    private static func stealthUserScript() -> WKUserScript {
+        let source = """
+        (function() {
+          try { Object.defineProperty(navigator, 'webdriver', { get: () => undefined }); } catch (e) {}
+          try {
+            const fakePlugins = [
+              { name: 'PDF Viewer', filename: 'internal-pdf-viewer', description: 'Portable Document Format' },
+              { name: 'WebKit built-in PDF', filename: 'webkit-built-in-pdf', description: 'Portable Document Format' }
+            ];
+            fakePlugins.item = (i) => fakePlugins[i] || null;
+            fakePlugins.namedItem = (n) => fakePlugins.find(p => p.name === n) || null;
+            fakePlugins.refresh = () => {};
+            Object.defineProperty(navigator, 'plugins', { get: () => fakePlugins });
+          } catch (e) {}
+          try { Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] }); } catch (e) {}
+        })();
+        """
+        return WKUserScript(source: source,
+                            injectionTime: .atDocumentStart,
+                            forMainFrameOnly: false)
     }
 
     @MainActor
@@ -428,7 +455,10 @@ final class WebLoginCoordinator: NSObject, ObservableObject, WKNavigationDelegat
 
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration,
                  for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
-        // Google Sign-In opens a popup — create a real child webview sharing the same session
+        // Google Sign-In opens a popup — create a real child webview sharing the same session.
+        // Re-inject the stealth script: WebKit hands us a fresh configuration whose
+        // userContentController may not carry the parent's scripts in all macOS versions.
+        configuration.userContentController.addUserScript(Self.stealthUserScript())
         let popup = WKWebView(frame: .zero, configuration: configuration)
         popup.customUserAgent = webView.customUserAgent
         popup.navigationDelegate = self
