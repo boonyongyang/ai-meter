@@ -152,7 +152,8 @@ private struct MinimaxHeroView: View {
                 Text("Top: \(topModelName)")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(MinimaxTelemetryTheme.secondaryText)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(intervalRiskText)
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
