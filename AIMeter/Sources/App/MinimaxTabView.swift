@@ -295,6 +295,8 @@ private struct MinimaxLimitsView: View {
                     Text(subtitle)
                         .font(.system(size: 9))
                         .foregroundColor(MinimaxTelemetryTheme.tertiaryText)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 Spacer(minLength: 8)
