@@ -96,6 +96,7 @@ private struct MinimaxHeaderView: View {
 
 private struct MinimaxHeroView: View {
     let data: MinimaxUsageData
+    let onRefresh: () -> Void
 
     private var highestInterval: Int {
         data.highestIntervalPercent
@@ -124,6 +125,18 @@ private struct MinimaxHeroView: View {
     }
 
     var body: some View {
+        Button(action: onRefresh) {
+            heroCard
+        }
+        .buttonStyle(.plain)
+        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .help("Refresh MiniMax quota")
+        .accessibilityLabel("Refresh all providers")
+        .accessibilityValue("\(highestInterval)% used")
+        .accessibilityHint("Refreshes all provider data.")
+    }
+
+    private var heroCard: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Interval Telemetry")
@@ -592,7 +605,7 @@ struct MinimaxTabView: View {
                         ErrorBannerView(message: "Rate limited — retrying", retryDate: minimaxService.retryDate)
                     }
 
-                    MinimaxHeroView(data: minimaxService.minimaxData)
+                    MinimaxHeroView(data: minimaxService.minimaxData, onRefresh: onRefresh)
                     MinimaxLimitsView(data: minimaxService.minimaxData)
 
                     MinimaxSectionCard(title: "Interval Risk Lanes", subtitle: "Models grouped by highest interval pressure", surfaceColor: MinimaxTelemetryTheme.panelRaised) {

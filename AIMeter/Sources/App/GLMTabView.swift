@@ -127,8 +127,21 @@ private struct GLMDialGauge: View {
 
 private struct GLMHeroView: View {
     let data: GLMUsageData
+    let onRefresh: () -> Void
 
     var body: some View {
+        Button(action: onRefresh) {
+            heroCard
+        }
+        .buttonStyle(.plain)
+        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .help("Refresh GLM quota")
+        .accessibilityLabel("Refresh all providers")
+        .accessibilityValue("\(data.tokensPercent)% used")
+        .accessibilityHint("Refreshes all provider data.")
+    }
+
+    private var heroCard: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Token Quota")
@@ -488,7 +501,7 @@ struct GLMTabView: View {
                     }
                 }
 
-                GLMHeroView(data: glmData)
+                GLMHeroView(data: glmData, onRefresh: onRefresh)
                 GLMLimitsView(data: glmData)
                 GLMRecentActivityView(points: points)
                 GLMFooterView(
