@@ -173,7 +173,7 @@ private struct MinimaxHeroView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            MinimaxDialGauge(percentage: highestInterval, used: intervalUsed, total: intervalTotal)
+            MinimaxDialGauge(percentage: highestInterval, used: intervalUsed, total: intervalTotal, resetsAt: peakIntervalModel?.resetsAt)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 14)
@@ -207,6 +207,7 @@ private struct MinimaxDialGauge: View {
     let percentage: Int
     let used: Int
     let total: Int
+    let resetsAt: Date?
     private let segmentCount = 72
 
     private var progress: Double {
@@ -238,15 +239,28 @@ private struct MinimaxDialGauge: View {
                 .fill(Color.black.opacity(0.18))
                 .padding(14)
 
-            VStack(spacing: 3) {
+            VStack(spacing: 2) {
                 Text("INT")
                     .font(.system(size: 8, weight: .bold, design: .monospaced))
                     .foregroundColor(MinimaxTelemetryTheme.secondaryText)
                     .textCase(.uppercase)
                     .tracking(0.7)
-                Text("\(used)/\(total)")
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundColor(MinimaxTelemetryTheme.primaryText)
+                if total > 0 {
+                    Text("\(used)/\(total)")
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundColor(MinimaxTelemetryTheme.primaryText)
+                } else if let countdown = ResetTimeFormatter.format(resetsAt, style: .countdown) {
+                    Text(countdown)
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(MinimaxTelemetryTheme.primaryText)
+                    Text("left")
+                        .font(.system(size: 7, weight: .medium, design: .monospaced))
+                        .foregroundColor(MinimaxTelemetryTheme.tertiaryText)
+                } else {
+                    Text("–")
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundColor(MinimaxTelemetryTheme.primaryText)
+                }
             }
         }
         .frame(width: 128, height: 128)
@@ -269,7 +283,7 @@ private struct MinimaxLimitsView: View {
                         title: "Weekly Peak",
                         subtitle: model.displayName,
                         percentage: model.weeklyPercent,
-                        detail: "\(model.weeklyUsed)/\(model.weeklyTotal)"
+                        detail: ResetTimeFormatter.format(model.weeklyResetsAt, style: .dayTime) ?? "–"
                     )
                 }
             }
@@ -627,9 +641,17 @@ struct MinimaxTabView: View {
                                 DisclosureGroup(isExpanded: isExpanded(model.modelName)) {
                                     VStack(spacing: 8) {
                                         UsageCardView(
+                                            icon: "clock.badge",
+                                            title: "Interval",
+                                            subtitle: "\(model.intervalPercent)% used",
+                                            percentage: model.intervalPercent,
+                                            resetText: ResetTimeFormatter.format(model.resetsAt, style: .countdown).map { "in \($0)" },
+                                            accentColor: ProviderTheme.minimax.accentColor
+                                        )
+                                        UsageCardView(
                                             icon: "calendar.badge.clock",
                                             title: "Weekly",
-                                            subtitle: "\(model.weeklyUsed)/\(model.weeklyTotal) used",
+                                            subtitle: model.weeklyTotal > 0 ? "\(model.weeklyUsed)/\(model.weeklyTotal) used" : "\(model.weeklyPercent)% used",
                                             percentage: model.weeklyPercent,
                                             resetText: ResetTimeFormatter.format(model.weeklyResetsAt, style: .dayTime),
                                             accentColor: ProviderTheme.minimax.accentColor

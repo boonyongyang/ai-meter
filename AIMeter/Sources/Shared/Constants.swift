@@ -30,7 +30,7 @@ enum AppConstants {
         static let copilotUserURL = "https://api.github.com/copilot_internal/user"
         static let codexUsageURL = "https://chatgpt.com/backend-api/wham/usage"
         static let codexSessionURL = "https://chatgpt.com/api/auth/session"
-        static let minimaxQuotaURL = "https://www.minimax.io/v1/api/openplatform/coding_plan/remains"
+        static let minimaxQuotaURL = "https://www.minimax.io/v1/token_plan/remains"
     }
 
     enum Defaults {

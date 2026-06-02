@@ -60,23 +60,21 @@ final class MinimaxService: HTTPPollingService {
         guard decoded.base_resp.status_code == 0 else { throw URLError(.badServerResponse) }
 
         let models: [MinimaxModelQuota] = decoded.model_remains
-            .filter { $0.current_interval_total_count > 0 || $0.current_weekly_total_count > 0 }
+            .filter { $0.current_interval_status > 0 || $0.current_weekly_status > 0 }
             .map { remain in
-                // API fields represent REMAINING counts, so used = total - remaining
-                let intervalUsed = remain.current_interval_total_count - remain.current_interval_usage_count
-                let weeklyUsed = remain.current_weekly_total_count - remain.current_weekly_usage_count
-                let intervalPercent = percentOf(used: intervalUsed, total: remain.current_interval_total_count)
-                let weeklyPercent = percentOf(used: weeklyUsed, total: remain.current_weekly_total_count)
+                // API now provides remaining percent directly; counts are always 0
+                let intervalPercent = max(0, min(100, 100 - remain.current_interval_remaining_percent))
+                let weeklyPercent   = max(0, min(100, 100 - remain.current_weekly_remaining_percent))
                 let resetsAt = remain.end_time > 0 ? Date(timeIntervalSince1970: Double(remain.end_time) / 1000.0) : nil
                 let weeklyResetsAt = remain.weekly_end_time > 0 ? Date(timeIntervalSince1970: Double(remain.weekly_end_time) / 1000.0) : nil
                 return MinimaxModelQuota(
                     modelName: remain.model_name,
                     intervalPercent: intervalPercent,
                     weeklyPercent: weeklyPercent,
-                    intervalUsed: intervalUsed,
-                    intervalTotal: remain.current_interval_total_count,
-                    weeklyUsed: weeklyUsed,
-                    weeklyTotal: remain.current_weekly_total_count,
+                    intervalUsed: 0,
+                    intervalTotal: 0,
+                    weeklyUsed: 0,
+                    weeklyTotal: 0,
                     resetsAt: resetsAt,
                     weeklyResetsAt: weeklyResetsAt
                 )
@@ -88,10 +86,6 @@ final class MinimaxService: HTTPPollingService {
         NotificationManager.shared.checkSessionDepletion(provider: "MiniMax", usagePercent: Double(self.minimaxData.highestIntervalPercent))
     }
 
-    private func percentOf(used: Int, total: Int) -> Int {
-        guard total > 0 else { return 0 }
-        return Int((Double(used) / Double(total)) * 100)
-    }
 }
 
 // MARK: - API response models (private, only used for decoding)
@@ -118,4 +112,8 @@ private struct MinimaxModelRemain: Decodable {
     let weekly_start_time: Int64
     let weekly_end_time: Int64
     let weekly_remains_time: Int64
+    let current_interval_status: Int
+    let current_interval_remaining_percent: Int
+    let current_weekly_status: Int
+    let current_weekly_remaining_percent: Int
 }
