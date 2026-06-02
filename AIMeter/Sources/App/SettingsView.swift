@@ -1209,6 +1209,12 @@ struct DeveloperSettingsSection: View {
                 }
             }
 
+            // MARK: API Call Log
+
+            settingsSectionCard {
+                APICallLogView(logger: APICallLogger.shared)
+            }
+
             // MARK: Service Status
 
             settingsSectionCard {

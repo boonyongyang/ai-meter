@@ -30,31 +30,57 @@ enum APIClient {
         request.timeoutInterval = 30
         ClaudeHeaderBuilder.applyHeaders(to: &request, sessionKey: sessionKey, orgId: orgId)
 
-        let (data, response) = try await session.data(for: request)
+        let startTime = Date()
+        do {
+            let (data, response) = try await session.data(for: request)
+            let durationMs = Int(Date().timeIntervalSince(startTime) * 1000)
 
-        if let http = response as? HTTPURLResponse {
-            switch http.statusCode {
-            case 200...299:
-                break
-            case 401:
-                throw APIError.sessionExpired
-            case 403:
-                // Check if Cloudflare blocked
-                if let body = String(data: data, encoding: .utf8),
-                   body.contains("<!DOCTYPE html>") || body.contains("<html") {
-                    throw APIError.cloudflareBlocked
+            if let http = response as? HTTPURLResponse {
+                await APICallLogger.shared.log(APILogEntry(
+                    timestamp: startTime,
+                    provider: "Claude",
+                    url: url.absoluteString,
+                    method: "GET",
+                    statusCode: http.statusCode,
+                    durationMs: durationMs,
+                    responsePreview: APICallLogger.preview(data),
+                    error: String?.none
+                ))
+                switch http.statusCode {
+                case 200...299:
+                    break
+                case 401:
+                    throw APIError.sessionExpired
+                case 403:
+                    if let body = String(data: data, encoding: .utf8),
+                       body.contains("<!DOCTYPE html>") || body.contains("<html") {
+                        throw APIError.cloudflareBlocked
+                    }
+                    throw APIError.sessionExpired
+                case 429:
+                    let retryAfter = (http.value(forHTTPHeaderField: "retry-after"))
+                        .flatMap { TimeInterval($0) } ?? 60
+                    throw APIError.rateLimited(retryAfter: retryAfter)
+                default:
+                    throw APIError.fetchFailed
                 }
-                throw APIError.sessionExpired
-            case 429:
-                let retryAfter = (http.value(forHTTPHeaderField: "retry-after"))
-                    .flatMap { TimeInterval($0) } ?? 60
-                throw APIError.rateLimited(retryAfter: retryAfter)
-            default:
-                throw APIError.fetchFailed
             }
-        }
 
-        return try parseResponse(data)
+            return try parseResponse(data)
+        } catch let apiError as APIError {
+            let durationMs = Int(Date().timeIntervalSince(startTime) * 1000)
+            await APICallLogger.shared.log(APILogEntry(
+                timestamp: startTime,
+                provider: "Claude",
+                url: url.absoluteString,
+                method: "GET",
+                statusCode: Int?.none,
+                durationMs: durationMs,
+                responsePreview: String?.none,
+                error: "\(apiError)"
+            ))
+            throw apiError
+        }
     }
 
     /// Fetch extra usage (overage spend limit) — optional, failures are non-fatal
