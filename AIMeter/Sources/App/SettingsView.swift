@@ -1115,11 +1115,42 @@ struct DeveloperSettingsSection: View {
     @AppStorage("demoUIMiniMax") private var demoUIMiniMax: Bool = false
     @AppStorage("forceEmptyStatesAllProviders") private var forceEmptyStatesAllProviders: Bool = false
 
+    @ObservedObject private var apiLogger = APICallLogger.shared
     @State private var clearCacheConfirm = false
     @State private var resetSettingsConfirm = false
+    @State private var showAPILog = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+
+            // MARK: API Log
+
+            settingsSectionCard {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("API Log")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.primary)
+                        Text("Live request & response inspector")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    if apiLogger.entries.count > 0 {
+                        Text("\(apiLogger.entries.count)")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 3)
+                            .background(Color.white.opacity(0.08))
+                            .clipShape(Capsule())
+                    }
+                    Button("Open") { showAPILog = true }
+                        .font(.system(size: 11, weight: .medium))
+                        .buttonStyle(.plain)
+                        .foregroundColor(.accentColor)
+                }
+            }
 
             // MARK: Notifications
 
@@ -1330,6 +1361,9 @@ struct DeveloperSettingsSection: View {
                     infoRow("macOS", value: ProcessInfo.processInfo.operatingSystemVersionString)
                 }
             }
+        }
+        .sheet(isPresented: $showAPILog) {
+            APILogSheetView(logger: apiLogger)
         }
     }
 

@@ -45,10 +45,24 @@ class HTTPPollingService: PollingServiceBase {
             return
         }
 
+        let startTime = Date()
+
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
+            let durationMs = Int(Date().timeIntervalSince(startTime) * 1000)
 
             if let http = response as? HTTPURLResponse {
+                APICallLogger.shared.log(APILogEntry(
+                    timestamp: startTime,
+                    provider: APICallLogger.providerName(from: request.url),
+                    url: request.url?.absoluteString ?? "",
+                    method: request.httpMethod ?? "GET",
+                    statusCode: http.statusCode,
+                    durationMs: durationMs,
+                    responsePreview: APICallLogger.preview(data),
+                    error: String?.none
+                ))
+
                 if http.statusCode == 429 {
                     let retryAfter = http.value(forHTTPHeaderField: "retry-after")
                         .flatMap { TimeInterval($0) } ?? 60
@@ -78,6 +92,17 @@ class HTTPPollingService: PollingServiceBase {
             self.error = nil
             self.retryDate = nil
         } catch {
+            let durationMs = Int(Date().timeIntervalSince(startTime) * 1000)
+            APICallLogger.shared.log(APILogEntry(
+                timestamp: startTime,
+                provider: APICallLogger.providerName(from: request.url),
+                url: request.url?.absoluteString ?? "",
+                method: request.httpMethod ?? "GET",
+                statusCode: Int?.none,
+                durationMs: durationMs,
+                responsePreview: String?.none,
+                error: error.localizedDescription
+            ))
             self.isStale = true
             self.error = .fetchFailed
             self.retryDate = nil

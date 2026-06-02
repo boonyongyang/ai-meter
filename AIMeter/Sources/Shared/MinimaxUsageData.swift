@@ -5,10 +5,6 @@ struct MinimaxModelQuota: Codable, Equatable, Identifiable {
     let modelName: String
     let intervalPercent: Int
     let weeklyPercent: Int
-    let intervalUsed: Int
-    let intervalTotal: Int
-    let weeklyUsed: Int
-    let weeklyTotal: Int
     let resetsAt: Date?
     let weeklyResetsAt: Date?
 

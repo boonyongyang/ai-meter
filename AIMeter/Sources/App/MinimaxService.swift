@@ -71,10 +71,6 @@ final class MinimaxService: HTTPPollingService {
                     modelName: remain.model_name,
                     intervalPercent: intervalPercent,
                     weeklyPercent: weeklyPercent,
-                    intervalUsed: 0,
-                    intervalTotal: 0,
-                    weeklyUsed: 0,
-                    weeklyTotal: 0,
                     resetsAt: resetsAt,
                     weeklyResetsAt: weeklyResetsAt
                 )
@@ -102,16 +98,8 @@ private struct MinimaxBaseResp: Decodable {
 
 private struct MinimaxModelRemain: Decodable {
     let model_name: String
-    let current_interval_total_count: Int
-    let current_interval_usage_count: Int
-    let start_time: Int64
     let end_time: Int64
-    let remains_time: Int64
-    let current_weekly_total_count: Int
-    let current_weekly_usage_count: Int
-    let weekly_start_time: Int64
     let weekly_end_time: Int64
-    let weekly_remains_time: Int64
     let current_interval_status: Int
     let current_interval_remaining_percent: Int
     let current_weekly_status: Int

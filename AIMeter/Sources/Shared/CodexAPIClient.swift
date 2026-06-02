@@ -22,23 +22,48 @@ enum CodexAPIClient {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = 15
 
-        let (data, response) = try await session.data(for: request)
+        let startTime = Date()
+        do {
+            let (data, response) = try await session.data(for: request)
+            let durationMs = Int(Date().timeIntervalSince(startTime) * 1000)
 
-        if let http = response as? HTTPURLResponse {
-            if http.statusCode == 429 {
-                let retryAfter = (http.value(forHTTPHeaderField: "retry-after"))
-                    .flatMap { TimeInterval($0) } ?? 60
-                throw CodexAPIError.rateLimited(retryAfter: retryAfter)
+            if let http = response as? HTTPURLResponse {
+                await APICallLogger.shared.log(APILogEntry(
+                    timestamp: startTime,
+                    provider: "Codex",
+                    url: endpoint.absoluteString,
+                    method: "GET",
+                    statusCode: http.statusCode,
+                    durationMs: durationMs,
+                    responsePreview: APICallLogger.preview(data),
+                    error: String?.none
+                ))
+                if http.statusCode == 429 {
+                    let retryAfter = (http.value(forHTTPHeaderField: "retry-after"))
+                        .flatMap { TimeInterval($0) } ?? 60
+                    throw CodexAPIError.rateLimited(retryAfter: retryAfter)
+                }
+                if http.statusCode == 401 { throw CodexAPIError.unauthorized }
+                guard (200...299).contains(http.statusCode) else {
+                    throw CodexAPIError.fetchFailed
+                }
             }
-            if http.statusCode == 401 {
-                throw CodexAPIError.unauthorized
-            }
-            guard (200...299).contains(http.statusCode) else {
-                throw CodexAPIError.fetchFailed
-            }
+
+            return try parseResponse(data)
+        } catch {
+            let durationMs = Int(Date().timeIntervalSince(startTime) * 1000)
+            await APICallLogger.shared.log(APILogEntry(
+                timestamp: startTime,
+                provider: "Codex",
+                url: endpoint.absoluteString,
+                method: "GET",
+                statusCode: Int?.none,
+                durationMs: durationMs,
+                responsePreview: String?.none,
+                error: "\(error)"
+            ))
+            throw error
         }
-
-        return try parseResponse(data)
     }
 
     /// Parse the raw API response into CodexUsageData (testable)
