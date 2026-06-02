@@ -135,7 +135,7 @@ private struct GLMHeroView: View {
         }
         .buttonStyle(.plain)
         .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .help("Refresh GLM quota")
+        .help("Refresh all providers")
         .accessibilityLabel("Refresh all providers")
         .accessibilityValue("\(data.tokensPercent)% used")
         .accessibilityHint("Refreshes all provider data.")

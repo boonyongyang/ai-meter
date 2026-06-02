@@ -236,7 +236,7 @@ private struct CodexHeroView: View {
         }
         .buttonStyle(.plain)
         .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .help("Refresh Codex quota")
+        .help("Refresh all providers")
         .accessibilityLabel("Refresh all providers")
         .accessibilityValue("\(data.primaryPercent)% used")
         .accessibilityHint("Refreshes all provider data.")

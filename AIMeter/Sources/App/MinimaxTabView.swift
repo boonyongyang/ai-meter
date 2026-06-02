@@ -113,9 +113,6 @@ private struct MinimaxHeroView: View {
         return model.displayName
     }
 
-    private var intervalUsed: Int { peakIntervalModel?.intervalUsed ?? 0 }
-    private var intervalTotal: Int { peakIntervalModel?.intervalTotal ?? 0 }
-
     private var intervalTone: Color {
         UsageColor.forUtilization(highestInterval)
     }
@@ -130,7 +127,7 @@ private struct MinimaxHeroView: View {
         }
         .buttonStyle(.plain)
         .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .help("Refresh MiniMax quota")
+        .help("Refresh all providers")
         .accessibilityLabel("Refresh all providers")
         .accessibilityValue("\(highestInterval)% used")
         .accessibilityHint("Refreshes all provider data.")
@@ -173,7 +170,7 @@ private struct MinimaxHeroView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            MinimaxDialGauge(percentage: highestInterval, used: intervalUsed, total: intervalTotal, resetsAt: peakIntervalModel?.resetsAt)
+            MinimaxDialGauge(percentage: highestInterval, resetsAt: peakIntervalModel?.resetsAt)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 14)
@@ -205,8 +202,6 @@ private struct MinimaxHeroView: View {
 
 private struct MinimaxDialGauge: View {
     let percentage: Int
-    let used: Int
-    let total: Int
     let resetsAt: Date?
     private let segmentCount = 72
 
@@ -245,11 +240,7 @@ private struct MinimaxDialGauge: View {
                     .foregroundColor(MinimaxTelemetryTheme.secondaryText)
                     .textCase(.uppercase)
                     .tracking(0.7)
-                if total > 0 {
-                    Text("\(used)/\(total)")
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .foregroundColor(MinimaxTelemetryTheme.primaryText)
-                } else if let countdown = ResetTimeFormatter.format(resetsAt, style: .countdown) {
+                if let countdown = ResetTimeFormatter.format(resetsAt, style: .countdown) {
                     Text(countdown)
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundColor(MinimaxTelemetryTheme.primaryText)
@@ -635,7 +626,7 @@ struct MinimaxTabView: View {
                         }
                     }
 
-                    MinimaxSectionCard(title: "Model Bank", subtitle: "Drill into model-level weekly usage") {
+                    MinimaxSectionCard(title: "Model Bank", subtitle: "Drill into model-level interval & weekly usage") {
                         VStack(spacing: 0) {
                             ForEach(sortedModels) { model in
                                 DisclosureGroup(isExpanded: isExpanded(model.modelName)) {
@@ -651,7 +642,7 @@ struct MinimaxTabView: View {
                                         UsageCardView(
                                             icon: "calendar.badge.clock",
                                             title: "Weekly",
-                                            subtitle: model.weeklyTotal > 0 ? "\(model.weeklyUsed)/\(model.weeklyTotal) used" : "\(model.weeklyPercent)% used",
+                                            subtitle: "\(model.weeklyPercent)% used",
                                             percentage: model.weeklyPercent,
                                             resetText: ResetTimeFormatter.format(model.weeklyResetsAt, style: .dayTime),
                                             accentColor: ProviderTheme.minimax.accentColor
