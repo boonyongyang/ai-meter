@@ -1362,6 +1362,9 @@ struct DeveloperSettingsSection: View {
                 }
             }
         }
+        .sheet(isPresented: $showAPILog) {
+            APILogSheetView(logger: apiLogger)
+        }
     }
 
     private func serviceStatusRow(_ name: String, date: Date?) -> some View {
