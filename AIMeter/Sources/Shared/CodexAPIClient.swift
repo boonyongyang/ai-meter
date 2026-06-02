@@ -50,7 +50,7 @@ enum CodexAPIClient {
             }
 
             return try parseResponse(data)
-        } catch let apiError as CodexAPIError {
+        } catch {
             let durationMs = Int(Date().timeIntervalSince(startTime) * 1000)
             await APICallLogger.shared.log(APILogEntry(
                 timestamp: startTime,
@@ -60,9 +60,9 @@ enum CodexAPIClient {
                 statusCode: Int?.none,
                 durationMs: durationMs,
                 responsePreview: String?.none,
-                error: "\(apiError)"
+                error: "\(error)"
             ))
-            throw apiError
+            throw error
         }
     }
 

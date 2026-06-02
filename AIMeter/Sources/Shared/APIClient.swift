@@ -67,7 +67,7 @@ enum APIClient {
             }
 
             return try parseResponse(data)
-        } catch let apiError as APIError {
+        } catch {
             let durationMs = Int(Date().timeIntervalSince(startTime) * 1000)
             await APICallLogger.shared.log(APILogEntry(
                 timestamp: startTime,
@@ -77,9 +77,9 @@ enum APIClient {
                 statusCode: Int?.none,
                 durationMs: durationMs,
                 responsePreview: String?.none,
-                error: "\(apiError)"
+                error: "\(error)"
             ))
-            throw apiError
+            throw error
         }
     }
 

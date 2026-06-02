@@ -57,7 +57,7 @@ enum CopilotAPIClient {
             }
 
             return try parseResponse(data)
-        } catch let apiError as CopilotAPIError {
+        } catch {
             let durationMs = Int(Date().timeIntervalSince(startTime) * 1000)
             await APICallLogger.shared.log(APILogEntry(
                 timestamp: startTime,
@@ -67,9 +67,9 @@ enum CopilotAPIClient {
                 statusCode: Int?.none,
                 durationMs: durationMs,
                 responsePreview: String?.none,
-                error: "\(apiError)"
+                error: "\(error)"
             ))
-            throw apiError
+            throw error
         }
     }
 

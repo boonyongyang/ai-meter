@@ -16,7 +16,7 @@ struct APICallLogView: View {
             )
         }
         return seen.map { (name: $0.key, count: $0.value.count, hasRecentError: $0.value.hasError) }
-            .sorted { $0.count > $1.count }
+            .sorted { $0.count != $1.count ? $0.count > $1.count : $0.name < $1.name }
     }
 
     var body: some View {
@@ -128,7 +128,6 @@ struct APICallLogView: View {
                         }
                     }
                 }
-                .frame(maxHeight: 280)
             }
         }
         .background(Color.black.opacity(0.2))
@@ -256,6 +255,42 @@ private struct LogRowView: View {
     private func timeString(_ date: Date) -> String {
         let c = Calendar.current.dateComponents([.hour, .minute, .second], from: date)
         return String(format: "%02d:%02d:%02d", c.hour ?? 0, c.minute ?? 0, c.second ?? 0)
+    }
+}
+
+// MARK: - Full-page sheet wrapper
+
+struct APILogSheetView: View {
+    @ObservedObject var logger: APICallLogger
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Sheet title bar
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("API Log")
+                        .font(.system(size: 14, weight: .bold))
+                    Text("Live request & response inspector")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+                Button("Done") { dismiss() }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.accentColor)
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+
+            Divider().opacity(0.15)
+
+            APICallLogView(logger: logger)
+                .padding(16)
+        }
+        .frame(minWidth: 680, minHeight: 520)
+        .background(Color(red: 0.07, green: 0.09, blue: 0.11))
     }
 }
 
